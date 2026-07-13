@@ -7,13 +7,23 @@ using System.Net.Http.Json;
 
 namespace Celeste.Mod.CelesteNet.Server.API
 {
-  public class APIUserData(APIModule module) : UserData(module.Server)
+  public class APIUserData : UserData
   {
-    private readonly HttpClient Client = new();
+    private readonly HttpClient Client;
 
-    protected internal UserData Fallback = new FileSystemUserData(module.Server);
+    protected internal UserData Fallback;
 
-    private readonly APISettings Settings = module.Settings;
+    private readonly APISettings Settings;
+
+    public APIUserData(APIModule module) : base(module.Server)
+    {
+      Client = new();
+      Fallback = new FileSystemUserData(Server);
+      Settings = module.Settings;
+
+      Client.DefaultRequestHeaders.UserAgent.Clear();
+      Client.DefaultRequestHeaders.UserAgent.ParseAdd("CelesteNet APIModule for " + Settings.InstanceNameForUserAgent + "/" + typeof(CelesteNetServer).Assembly.GetName().Version);
+    }
 
     public override void CopyTo(UserData other)
     {

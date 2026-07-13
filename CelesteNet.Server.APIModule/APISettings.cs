@@ -7,5 +7,7 @@
         public bool UseSqliteFallback { get; set; } = false;
 
         public string ApiBase { get; set; } = "https://celestenet.0x0a.de/api";
+
+        public string InstanceNameForUserAgent { get; set; } = "{Your server instance name}";
     }
 }
