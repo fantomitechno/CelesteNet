@@ -1,4 +1,6 @@
-﻿namespace Celeste.Mod.CelesteNet.Server.API
+﻿using System.Collections.Generic;
+
+namespace Celeste.Mod.CelesteNet.Server.API
 {
     public class APISettings : CelesteNetServerModuleSettings
     {
@@ -9,5 +11,9 @@
         public string ApiBase { get; set; } = "https://celestenet.0x0a.de/api";
 
         public string InstanceNameForUserAgent { get; set; } = "Instance Name";
+
+        public List<string> InstanceAdmins { get; set; } = [];
+
+        public List<string> InstanceMods { get; set; } = [];
     }
 }

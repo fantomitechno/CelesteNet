@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 
@@ -176,11 +177,23 @@ namespace Celeste.Mod.CelesteNet.Server.API
         }
         value = json;
         var toModify = (BasicUserInfo)(Object)value;
-        if (uid == "563749920683720709")
 
+        if (Settings.InstanceMods.Contains(uid))
         {
           toModify.Tags.Add(BasicUserInfo.TAG_AUTH);
+        }
+        else
+        {
+          toModify.Tags.Remove(BasicUserInfo.TAG_AUTH);
+        }
+
+        if (Settings.InstanceAdmins.Contains(uid))
+        {
           toModify.Tags.Add(BasicUserInfo.TAG_AUTH_EXEC);
+        }
+        else
+        {
+          toModify.Tags.Remove(BasicUserInfo.TAG_AUTH_EXEC);
         }
 
         value = (T)(Object)toModify;
@@ -211,7 +224,7 @@ namespace Celeste.Mod.CelesteNet.Server.API
       public string Name { get; set; } = "";
       public string Discrim { get; set; } = "";
       public HashSet<string> Tags { get; set; } = new();
-      public String Key { get; set; } = "";
+      public string Key { get; set; } = "";
     }
 
     private class RequestStats
