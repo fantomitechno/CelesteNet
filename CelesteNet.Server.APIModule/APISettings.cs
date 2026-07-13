@@ -8,6 +8,6 @@
 
         public string ApiBase { get; set; } = "https://celestenet.0x0a.de/api";
 
-        public string InstanceNameForUserAgent { get; set; } = "{Your server instance name}";
+        public string InstanceNameForUserAgent { get; set; } = "Instance Name";
     }
 }
