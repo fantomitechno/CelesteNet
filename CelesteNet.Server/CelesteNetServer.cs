@@ -11,8 +11,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Celeste.Mod.CelesteNet.DataTypes;
 
-namespace Celeste.Mod.CelesteNet.Server {
-    public class CelesteNetServer : IDisposable {
+namespace Celeste.Mod.CelesteNet.Server
+{
+    public class CelesteNetServer : IDisposable
+    {
 
         public readonly DateTime StartupTime;
         public readonly long Timestamp;
@@ -49,9 +51,11 @@ namespace Celeste.Mod.CelesteNet.Server {
         private readonly CancellationTokenSource ShutdownTokenSrc = new();
 
         private bool _IsAlive;
-        public bool IsAlive {
+        public bool IsAlive
+        {
             get => _IsAlive;
-            set {
+            set
+            {
                 if (_IsAlive == value)
                     return;
                 if (value && ShutdownTokenSrc.IsCancellationRequested)
@@ -64,16 +68,19 @@ namespace Celeste.Mod.CelesteNet.Server {
         }
 
         public CelesteNetServer()
-            : this(new()) {
+            : this(new())
+        {
         }
 
-        public CelesteNetServer(CelesteNetServerSettings settings) {
+        public CelesteNetServer(CelesteNetServerSettings settings)
+        {
             StartupTime = DateTime.UtcNow;
             Timestamp = StartupTime.Ticks / TimeSpan.TicksPerMillisecond;
 
             Settings = settings;
 
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
                 if (args.Name == null)
                     return null;
 
@@ -106,23 +113,28 @@ namespace Celeste.Mod.CelesteNet.Server {
 
             Channels = new(this);
 
-            UserData = new FileSystemUserData(this);
+            if (Settings.UseMainAPI) UserData = new APIUserData(this);
+            else UserData = new FileSystemUserData(this);
 
             Initialized = true;
-            lock (Modules) {
-                foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers) {
+            lock (Modules)
+            {
+                foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers)
+                {
                     Logger.Log(LogLevel.INF, "module", $"Initializing {wrapper.ID}");
                     wrapper.Module?.Init(wrapper);
                 }
             }
 
-            ModulesFSWatcher = new() {
+            ModulesFSWatcher = new()
+            {
                 Path = Path.GetFullPath(Settings.ModuleRoot),
                 Filter = "*.dll",
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime
             };
 
-            ModulesFSWatcher.Error += (sender, args) => {
+            ModulesFSWatcher.Error += (sender, args) =>
+            {
                 Logger.Log(LogLevel.ERR, "module", $"Module file watcher error:\n{args.GetException()}");
             };
 
@@ -137,7 +149,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             if (numThreads < 0 && Environment.ProcessorCount > 0)
                 numThreads = Environment.ProcessorCount;
 
-            if (numThreads < 5) {
+            if (numThreads < 5)
+            {
                 // not even sure if this'll 100% work, just basing this off the ThreadPool.Scheduler.AddRole calls in Start() further down
                 numThreads = 5;
                 Logger.Log(LogLevel.WRN, "module", $"Could not determine thread count, or set too low! (NetPlusThreadPoolThreads = {Settings.NetPlusThreadPoolThreads} / Environment.ProcessorCount = {Environment.ProcessorCount}). Defaulting to {numThreads}.");
@@ -154,9 +167,11 @@ namespace Celeste.Mod.CelesteNet.Server {
             AvatarSendTimer.Elapsed += (_, _) => ClearAvatarQueues();
         }
 
-        private void OnModuleFileUpdate(object sender, FileSystemEventArgs args) {
+        private void OnModuleFileUpdate(object sender, FileSystemEventArgs args)
+        {
             Logger.Log(LogLevel.VVV, "module", $"Module file changed: {args.FullPath}, {args.ChangeType}");
-            QueuedTaskHelper.Do("ReloadModuleAssembly:" + args.FullPath, () => {
+            QueuedTaskHelper.Do("ReloadModuleAssembly:" + args.FullPath, () =>
+            {
                 lock (Modules)
                     foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers)
                         if (args.FullPath == wrapper.AssemblyPath)
@@ -164,15 +179,18 @@ namespace Celeste.Mod.CelesteNet.Server {
             });
         }
 
-        public void Start() {
+        public void Start()
+        {
             if (IsAlive)
                 return;
 
             Logger.Log(LogLevel.CRI, "main", "Startup");
             IsAlive = true;
 
-            lock (Modules) {
-                foreach (CelesteNetServerModule module in Modules) {
+            lock (Modules)
+            {
+                foreach (CelesteNetServerModule module in Modules)
+                {
                     Logger.Log(LogLevel.INF, "module", $"Starting {module.Wrapper?.ID ?? module.ToString()}");
                     module.Start();
                 }
@@ -181,7 +199,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             Channels.Start();
 
             IPEndPoint serverEP = new(IPAddress.IPv6Any, Settings.MainPort);
-            CelesteNetTCPUDPConnection.Settings tcpUdpConSettings = new() {
+            CelesteNetTCPUDPConnection.Settings tcpUdpConSettings = new()
+            {
                 MaxPacketSize = Settings.MaxPacketSize,
                 MaxQueueSize = Settings.MaxQueueSize,
                 MergeWindow = Settings.MergeWindow,
@@ -210,9 +229,12 @@ namespace Celeste.Mod.CelesteNet.Server {
             Logger.Log(LogLevel.CRI, "main", "Ready");
         }
 
-        public void Wait() {
-            foreach (CelesteNetConnection con in SafeDisposeQueue.GetConsumingEnumerable(ShutdownTokenSrc.Token)) {
-                if (con.IsAlive) {
+        public void Wait()
+        {
+            foreach (CelesteNetConnection con in SafeDisposeQueue.GetConsumingEnumerable(ShutdownTokenSrc.Token))
+            {
+                if (con.IsAlive)
+                {
                     Logger.Log("main", $"Safe dispose triggered for connection {con}");
                     con.Dispose();
                 }
@@ -221,7 +243,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             SafeDisposeQueue.Dispose();
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             if (!IsAlive)
                 return;
 
@@ -232,8 +255,10 @@ namespace Celeste.Mod.CelesteNet.Server {
 
             ModulesFSWatcher.Dispose();
 
-            lock (Modules) {
-                foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers.ToArray()) {
+            lock (Modules)
+            {
+                foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers.ToArray())
+                {
                     wrapper.Unload();
                 }
             }
@@ -248,11 +273,13 @@ namespace Celeste.Mod.CelesteNet.Server {
         }
 
 
-        public void RegisterModule(string path) {
+        public void RegisterModule(string path)
+        {
             ModuleWrappers.Add(new(this, path));
 
-            Reload:
-            foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers) {
+        Reload:
+            foreach (CelesteNetServerModuleWrapper wrapper in ModuleWrappers)
+            {
                 if (wrapper.Module != null ||
                     !wrapper.References.All(ModuleWrappers.Where(other => other.Module != null).Select(other => other.ID).Contains))
                     continue;
@@ -265,15 +292,19 @@ namespace Celeste.Mod.CelesteNet.Server {
         public T Get<T>() where T : class
             => TryGet(out T? module) ? module : throw new Exception($"Invalid module type: {typeof(T).FullName}");
 
-        public bool TryGet<T>([NotNullWhen(true)] out T? moduleT) where T : class {
-            lock (Modules) {
-                if (ModuleMap.TryGetValue(typeof(T), out CelesteNetServerModule? module)) {
+        public bool TryGet<T>([NotNullWhen(true)] out T? moduleT) where T : class
+        {
+            lock (Modules)
+            {
+                if (ModuleMap.TryGetValue(typeof(T), out CelesteNetServerModule? module))
+                {
                     moduleT = module as T ?? throw new Exception($"Incompatible types: Requested {typeof(T).FullName}, got {module.GetType().FullName}");
                     return true;
                 }
 
                 foreach (CelesteNetServerModule other in Modules)
-                    if (other is T otherT) {
+                    if (other is T otherT)
+                    {
                         ModuleMap[typeof(T)] = other;
                         moduleT = otherT;
                         return true;
@@ -287,9 +318,11 @@ namespace Celeste.Mod.CelesteNet.Server {
 
         public event Action<CelesteNetServer, CelesteNetConnection>? OnConnect;
 
-        public void HandleConnect(CelesteNetConnection con) {
+        public void HandleConnect(CelesteNetConnection con)
+        {
             Logger.Log(LogLevel.INF, "main", $"New connection: {con}");
-            using (ConLock.W()) {
+            using (ConLock.W())
+            {
                 Connections.Add(con);
                 OnConnect?.Invoke(this, con);
                 con.OnDisconnect += HandleDisconnect;
@@ -298,15 +331,18 @@ namespace Celeste.Mod.CelesteNet.Server {
 
         public event Action<CelesteNetServer, CelesteNetConnection, CelesteNetPlayerSession?>? OnDisconnect;
 
-        public void HandleDisconnect(CelesteNetConnection con) {
+        public void HandleDisconnect(CelesteNetConnection con)
+        {
             Logger.Log(LogLevel.INF, "main", $"Disconnecting: {con}");
 
             using (ConLock.W())
                 Connections.Remove(con);
 
             PlayersByCon.TryGetValue(con, out CelesteNetPlayerSession? session);
-            if (session != null) {
-                using (ConLock.W()) {
+            if (session != null)
+            {
+                using (ConLock.W())
+                {
                     Sessions.Remove(session);
                     PlayersByCon.TryRemove(con, out _);
                     PlayersByID.TryRemove(session.SessionID, out _);
@@ -320,10 +356,12 @@ namespace Celeste.Mod.CelesteNet.Server {
         public event Action<CelesteNetPlayerSession>? OnSessionStart;
 
         private int nextSesId = 0;
-        public CelesteNetPlayerSession CreateSession(CelesteNetConnection con, string playerUID, string playerName, CelesteNetClientOptions clientOptions) {
+        public CelesteNetPlayerSession CreateSession(CelesteNetConnection con, string playerUID, string playerName, CelesteNetClientOptions clientOptions)
+        {
             CelesteNetPlayerSession ses;
-            using (ConLock.W()) {
-                ses = new(this, con, unchecked ((uint) Interlocked.Increment(ref nextSesId)), playerUID, playerName, clientOptions);
+            using (ConLock.W())
+            {
+                ses = new(this, con, unchecked((uint)Interlocked.Increment(ref nextSesId)), playerUID, playerName, clientOptions);
                 Sessions.Add(ses);
                 PlayersByCon[con] = ses;
                 PlayersByID[ses.SessionID] = ses;
@@ -333,27 +371,38 @@ namespace Celeste.Mod.CelesteNet.Server {
             return ses;
         }
 
-        public void Broadcast(DataType data) {
+        public void Broadcast(DataType data)
+        {
             DataInternalBlob blob = new(Data, data);
             using (ConLock.R())
-                foreach (CelesteNetConnection con in Connections) {
-                    try {
+                foreach (CelesteNetConnection con in Connections)
+                {
+                    try
+                    {
                         con.Send(blob);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         // Whoops, it probably wasn't important anyway.
                         Logger.Log(LogLevel.DEV, "main", $"Broadcast (sync) failed:\n{data}\n{con}\n{e}");
                     }
                 };
         }
 
-        public void BroadcastAsync(DataType data) {
+        public void BroadcastAsync(DataType data)
+        {
             DataInternalBlob blob = new(Data, data);
             using (ConLock.R())
-                foreach (CelesteNetConnection con in Connections) {
-                    Task.Run(() => {
-                        try {
+                foreach (CelesteNetConnection con in Connections)
+                {
+                    Task.Run(() =>
+                    {
+                        try
+                        {
                             con.Send(blob);
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             // Whoops, it probably wasn't important anyway.
                             Logger.Log(LogLevel.DEV, "main", $"Broadcast (async) failed:\n{data}\n{con}\n{e}");
                         }
@@ -361,102 +410,139 @@ namespace Celeste.Mod.CelesteNet.Server {
                 }
         }
 
-        private void DoHeartbeatTick() {
+        private void DoHeartbeatTick()
+        {
             HashSet<(CelesteNetConnection con, string reason)> disposeCons = new();
             using (ConLock.R())
-                foreach (CelesteNetConnection con in new HashSet<CelesteNetConnection>(Connections)) {
-                    try {
-                        switch (con) {
-                            case CelesteNetTCPUDPConnection tcpUdpCon: {
-                                string? disposeReason = tcpUdpCon.DoHeartbeatTick();
-                                if (disposeReason != null)
-                                    disposeCons.Add((tcpUdpCon, disposeReason));
-                            } break;
+                foreach (CelesteNetConnection con in new HashSet<CelesteNetConnection>(Connections))
+                {
+                    try
+                    {
+                        switch (con)
+                        {
+                            case CelesteNetTCPUDPConnection tcpUdpCon:
+                                {
+                                    string? disposeReason = tcpUdpCon.DoHeartbeatTick();
+                                    if (disposeReason != null)
+                                        disposeCons.Add((tcpUdpCon, disposeReason));
+                                }
+                                break;
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         disposeCons.Add((con, $"Error in heartbeat tick of connection {con}: {e}"));
                     }
                 }
-            foreach ((CelesteNetConnection con, string reason) in disposeCons) {
+            foreach ((CelesteNetConnection con, string reason) in disposeCons)
+            {
                 Logger.Log(LogLevel.WRN, "heartbeat", reason);
-                try {
+                try
+                {
                     con.Dispose();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     Logger.Log(LogLevel.WRN, "main", $"Error disposing connection {con}: {e}");
                 }
             }
         }
 
-        private void AdjustTickRate() {
+        private void AdjustTickRate()
+        {
             CurrentTickRate = NextTickRate;
 
             TCPUDPSenderRole sender = ThreadPool.Scheduler.FindRole<TCPUDPSenderRole>()!;
             float actvRate = ThreadPool.ActivityRate, tcpByteRate = sender.TCPByteRate, udpByteRate = sender.UDPByteRate;
-            if (actvRate < Settings.TickRateLowActivityThreshold && tcpByteRate < Settings.TickRateLowTCPUplinkBpSThreshold && udpByteRate < Settings.TickRateLowUDPUplinkBpSThreshold) {
-                if (CurrentTickRate < Settings.MaxTickRate) {
+            if (actvRate < Settings.TickRateLowActivityThreshold && tcpByteRate < Settings.TickRateLowTCPUplinkBpSThreshold && udpByteRate < Settings.TickRateLowUDPUplinkBpSThreshold)
+            {
+                if (CurrentTickRate < Settings.MaxTickRate)
+                {
                     // Increase the tick rate
                     NextTickRate = Math.Min(Settings.MaxTickRate, CurrentTickRate * 2);
                     Logger.Log(LogLevel.INF, "main", $"Increased the tick rate {CurrentTickRate} TpS -> {NextTickRate} TpS");
                     CurrentTickRate = NextTickRate;
-                } else {
+                }
+                else
+                {
                     return;
                 }
-            } else if (actvRate > Settings.TickRateHighActivityThreshold && tcpByteRate > Settings.TickRateHighTCPUplinkBpSThreshold && udpByteRate > Settings.TickRateHighUDPUplinkBpSThreshold) {
+            }
+            else if (actvRate > Settings.TickRateHighActivityThreshold && tcpByteRate > Settings.TickRateHighTCPUplinkBpSThreshold && udpByteRate > Settings.TickRateHighUDPUplinkBpSThreshold)
+            {
                 // Decrease the tick rate
                 Logger.Log(LogLevel.INF, "main", $"Decreased the tick rate {CurrentTickRate} TpS -> {NextTickRate} TpS");
                 NextTickRate = CurrentTickRate / 2;
-            } else {
+            }
+            else
+            {
                 return;
             }
 
             // Broadcast the new tick rate
-            BroadcastAsync(new DataTickRate {
+            BroadcastAsync(new DataTickRate
+            {
                 TickRate = NextTickRate
             });
         }
 
-        private void SendPingRequests() {
-            using (ConLock.R()) {
+        private void SendPingRequests()
+        {
+            using (ConLock.R())
+            {
                 // Send ping requests for supported connections
-                foreach (CelesteNetConnection con in Connections) {
-                    switch (con) {
-                        case ConPlusTCPUDPConnection tcpUdpCon: {
-                            tcpUdpCon.SendPingRequest();
-                            break;
-                        }
+                foreach (CelesteNetConnection con in Connections)
+                {
+                    switch (con)
+                    {
+                        case ConPlusTCPUDPConnection tcpUdpCon:
+                            {
+                                tcpUdpCon.SendPingRequest();
+                                break;
+                            }
                     }
                 }
 
                 // Send connection info packets
-                foreach (CelesteNetPlayerSession ses in Sessions) {
-                    switch (ses.Con) {
-                        case ConPlusTCPUDPConnection tcpUdpCon: {
-                            DataInternalBlob conInfoPacket = DataInternalBlob.For(Data, new DataConnectionInfo() {
-                                Player = ses.PlayerInfo,
-                                TCPPingMs = tcpUdpCon.TCPPingMs,
-                                UDPPingMs = tcpUdpCon.UDPPingMs
-                            });
+                foreach (CelesteNetPlayerSession ses in Sessions)
+                {
+                    switch (ses.Con)
+                    {
+                        case ConPlusTCPUDPConnection tcpUdpCon:
+                            {
+                                DataInternalBlob conInfoPacket = DataInternalBlob.For(Data, new DataConnectionInfo()
+                                {
+                                    Player = ses.PlayerInfo,
+                                    TCPPingMs = tcpUdpCon.TCPPingMs,
+                                    UDPPingMs = tcpUdpCon.UDPPingMs
+                                });
 
-                            foreach (CelesteNetPlayerSession other in Sessions)
-                                other.Con.Send(conInfoPacket);
+                                foreach (CelesteNetPlayerSession other in Sessions)
+                                    other.Con.Send(conInfoPacket);
 
-                            break;
-                        }
+                                break;
+                            }
                     }
                 }
             }
         }
 
-        private void ClearAvatarQueues() {
-            using (ConLock.R()) {
-                foreach (CelesteNetPlayerSession ses in Sessions) {
+        private void ClearAvatarQueues()
+        {
+            using (ConLock.R())
+            {
+                foreach (CelesteNetPlayerSession ses in Sessions)
+                {
 
-                    if (ses.AvatarSendQueue.Count > 0) {
+                    if (ses.AvatarSendQueue.Count > 0)
+                    {
 
                         ses.AvatarSendQueue.RemoveWhere(other => !other.Alive);
 
-                        foreach (CelesteNetPlayerSession other in ses.AvatarSendQueue.Take(Settings.AvatarQueueBatchCount).ToList()) {
-                            foreach (DataInternalBlob frag in other.AvatarFragments) {
+                        foreach (CelesteNetPlayerSession other in ses.AvatarSendQueue.Take(Settings.AvatarQueueBatchCount).ToList())
+                        {
+                            foreach (DataInternalBlob frag in other.AvatarFragments)
+                            {
                                 ses.Con.Send(frag);
                             }
                             ses.AvatarSendQueue.Remove(other);
