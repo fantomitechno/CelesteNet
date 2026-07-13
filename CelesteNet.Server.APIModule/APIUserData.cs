@@ -10,11 +10,11 @@ namespace Celeste.Mod.CelesteNet.Server.API
 {
   public class APIUserData : UserData
   {
-    private readonly HttpClient Client;
+    internal readonly HttpClient Client;
 
-    protected internal UserData Fallback;
+    internal UserData Fallback;
 
-    private readonly APISettings Settings;
+    internal readonly APISettings Settings;
 
     public APIUserData(APIModule module) : base(module.Server)
     {
@@ -23,7 +23,7 @@ namespace Celeste.Mod.CelesteNet.Server.API
       Settings = module.Settings;
 
       Client.DefaultRequestHeaders.UserAgent.Clear();
-      Client.DefaultRequestHeaders.UserAgent.ParseAdd("CelesteNet APIModule for " + Settings.InstanceNameForUserAgent + "/" + typeof(CelesteNetServer).Assembly.GetName().Version);
+      Client.DefaultRequestHeaders.UserAgent.ParseAdd("CelesteNet APIModule for " + Settings.InstanceNameForUserAgent + "/" + CelesteNetUtils.LoadedVersion);
     }
 
     public override void CopyTo(UserData other)
@@ -134,16 +134,14 @@ namespace Celeste.Mod.CelesteNet.Server.API
 
     public override Stream? ReadFile(string uid, string name)
     {
-      if (name == "avatar.png")
+      var stream = Fallback.ReadFile(uid, name);
+      if (name == "avatar.png" && stream == null)
       {
         var file = Client.GetStreamAsync(Settings.ApiBase + "/avatar?fallback=true&uid=" + uid).Await();
         Fallback.InsertFile(uid, name, file);
-        return file;
-      }
-      else
-      {
         return Fallback.ReadFile(uid, name);
       }
+      return stream;
     }
 
     public override void RevokeKey(string key)
