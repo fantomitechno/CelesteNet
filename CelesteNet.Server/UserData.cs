@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Celeste.Mod.CelesteNet.Server {
-    public abstract class UserData : IDisposable {
+namespace Celeste.Mod.CelesteNet.Server
+{
+    public abstract class UserData : IDisposable
+    {
 
         public readonly CelesteNetServer Server;
 
-        protected UserData(CelesteNetServer server) {
+        protected UserData(CelesteNetServer server)
+        {
             Server = server;
         }
 
@@ -48,21 +51,25 @@ namespace Celeste.Mod.CelesteNet.Server {
 
     }
 
-    public class UserDataBatchContext : IDisposable {
+    public class UserDataBatchContext : IDisposable
+    {
 
         public static readonly UserDataBatchContext Nop = new();
 
-        protected UserDataBatchContext() {
+        protected UserDataBatchContext()
+        {
         }
 
-        public virtual void Dispose() {
+        public virtual void Dispose()
+        {
         }
 
     }
 
     public interface IUserDataType { }
 
-    public class BasicUserInfo : IUserDataType {
+    public class BasicUserInfo : IUserDataType
+    {
         public static readonly string TAG_AUTH = "moderator";
         public static readonly string TAG_AUTH_EXEC = "admin";
         public static readonly IReadOnlyList<string> AUTH_TAGS = new List<string>() {
@@ -76,7 +83,8 @@ namespace Celeste.Mod.CelesteNet.Server {
         public HashSet<string> Tags { get; set; } = new();
     }
 
-    public class BanInfo : IUserDataType {
+    public class BanInfo : IUserDataType
+    {
         public string UID { get; set; } = "";
         public string Name { get; set; } = "";
         public string Reason { get; set; } = "";
@@ -84,11 +92,18 @@ namespace Celeste.Mod.CelesteNet.Server {
         public DateTime? To { get; set; } = null;
     }
 
-    public class KickHistory : IUserDataType {
+    public class KickHistory : IUserDataType
+    {
         public List<Entry> Log { get; set; } = new();
-        public class Entry {
+        public class Entry
+        {
             public string Reason { get; set; } = "";
             public DateTime? From { get; set; } = null;
         }
+    }
+
+    public class WhiteListInfo : IUserDataType
+    {
+        public string UID { get; set; } = "";
     }
 }

@@ -1,18 +1,22 @@
 ﻿using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-namespace Celeste.Mod.CelesteNet.Server {
-    public class CelesteNetServerSettings : CelesteNetServerModuleSettings {
+namespace Celeste.Mod.CelesteNet.Server
+{
+    public class CelesteNetServerSettings : CelesteNetServerModuleSettings
+    {
 
         [YamlIgnore]
         [JsonIgnore]
         public static string DefaultFilePath = "celestenet-config.yaml";
 
-        public override void Load(string path = "") {
+        public override void Load(string path = "")
+        {
             base.Load(path.Nullify() ?? FilePath.Nullify() ?? DefaultFilePath);
         }
 
-        public override void Save(string path = "") {
+        public override void Save(string path = "")
+        {
             base.Save(path.Nullify() ?? FilePath.Nullify() ?? DefaultFilePath);
         }
 
@@ -72,7 +76,8 @@ namespace Celeste.Mod.CelesteNet.Server {
         public float PlayerUDPUplinkBpTCap { get; set; } = 4096;
         public float PlayerUDPUplinkPpTCap { get; set; } = 128;
 
-        public LogLevel LogLevel {
+        public LogLevel LogLevel
+        {
             get => Logger.Level;
             set => Logger.Level = value;
         }
@@ -85,6 +90,8 @@ namespace Celeste.Mod.CelesteNet.Server {
         public byte MaxFollowers { get; set; } = 12;
 
         public bool AuthOnly { get; set; } = false;
+
+        public bool IsWhitelisted { get; set; } = false;
 
         public bool ClientChecks { get; set; } = false;
 

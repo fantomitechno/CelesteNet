@@ -6,8 +6,10 @@ using System.Linq;
 using System.Threading;
 using Celeste.Mod.CelesteNet.DataTypes;
 
-namespace Celeste.Mod.CelesteNet.Server {
-    public class CelesteNetPlayerSession : IDisposable {
+namespace Celeste.Mod.CelesteNet.Server
+{
+    public class CelesteNetPlayerSession : IDisposable
+    {
 
         public static readonly HashSet<char> IllegalNameChars = new() { ':', '#', '|' };
 
@@ -64,7 +66,8 @@ namespace Celeste.Mod.CelesteNet.Server {
 
         private DataNetFilterList? FilterList = null;
 
-        internal CelesteNetPlayerSession(CelesteNetServer server, CelesteNetConnection con, uint sesId, string uid, string name, CelesteNetClientOptions clientOptions) {
+        internal CelesteNetPlayerSession(CelesteNetServer server, CelesteNetConnection con, uint sesId, string uid, string name, CelesteNetClientOptions clientOptions)
+        {
             Server = server;
             Con = con;
             SessionID = sesId;
@@ -83,38 +86,45 @@ namespace Celeste.Mod.CelesteNet.Server {
             Server.Data.RegisterHandlersIn(this);
         }
 
-        public bool CheckClientFeatureSupport(CelesteNetSupportedClientFeatures features) {
+        public bool CheckClientFeatureSupport(CelesteNetSupportedClientFeatures features)
+        {
             return ClientOptions.SupportedClientFeatures.HasFlag(features);
         }
 
-        public T? Get<T>(object ctx) where T : class {
-            if (!Alive) {
+        public T? Get<T>(object ctx) where T : class
+        {
+            if (!Alive)
+            {
                 Logger.Log(LogLevel.INF, "playersession", $"Early return on attempt to 'Get<{typeof(T)}>' when session is already !Alive");
                 return null;
             }
 
-            using (StateLock.R()) {
+            using (StateLock.R())
+            {
                 if (!StateContexts.TryGetValue(ctx, out Dictionary<Type, object>? states))
                     return null;
 
                 if (!states.TryGetValue(typeof(T), out object? state))
                     return null;
 
-                return (T) state;
+                return (T)state;
             }
         }
 
         [return: NotNullIfNotNull("state")]
-        public T? Set<T>(object ctx, T? state) where T : class {
+        public T? Set<T>(object ctx, T? state) where T : class
+        {
             if (state == null)
                 return Remove<T>(ctx);
 
-            if (!Alive) {
+            if (!Alive)
+            {
                 Logger.Log(LogLevel.INF, "playersession", $"Early return on attempt to 'Set<{typeof(T)}>' when session is already !Alive");
                 return state;
             }
 
-            using (StateLock.W()) {
+            using (StateLock.W())
+            {
                 if (!StateContexts.TryGetValue(ctx, out Dictionary<Type, object>? states))
                     StateContexts[ctx] = states = new();
 
@@ -123,13 +133,16 @@ namespace Celeste.Mod.CelesteNet.Server {
             }
         }
 
-        public T? Remove<T>(object ctx) where T : class {
-            if (!Alive) {
+        public T? Remove<T>(object ctx) where T : class
+        {
+            if (!Alive)
+            {
                 Logger.Log(LogLevel.INF, "playersession", $"Early return on attempt to 'Remove<{typeof(T)}>' when session is already !Alive");
                 return null;
             }
 
-            using (StateLock.W()) {
+            using (StateLock.W())
+            {
                 if (!StateContexts.TryGetValue(ctx, out Dictionary<Type, object>? states))
                     return null;
 
@@ -139,11 +152,12 @@ namespace Celeste.Mod.CelesteNet.Server {
                 states.Remove(typeof(T));
                 if (states.Count == 0)
                     StateContexts.Remove(ctx);
-                return (T) state;
+                return (T)state;
             }
         }
 
-        internal void Start() {
+        internal void Start()
+        {
             Logger.Log(LogLevel.INF, "playersession", $"Startup #{SessionID} {Con} (Session UID: {UID}; Connection UID: {Con.UID})");
             Logger.Log(LogLevel.VVV, "playersession", $"Startup #{SessionID} @ {DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond} - Startup");
 
@@ -151,7 +165,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             if (Server.Settings.ClientChecks && Con is ConPlusTCPUDPConnection cpCon && cpCon.GetAssociatedData<ExtendedHandshake.ConnectionData>() is ExtendedHandshake.ConnectionData extConData)
                 clientDisconnectReason = ExtendedHandshake.ClientCheck(cpCon, extConData);
 
-            if (clientDisconnectReason != null) {
+            if (clientDisconnectReason != null)
+            {
                 Logger.Log(LogLevel.VVV, "playersession", $"Session #{SessionID} disconnecting because ClientCheck returned: '{clientDisconnectReason}'");
                 Con.Send(new DataDisconnectReason { Text = clientDisconnectReason });
                 Con.Send(new DataInternalDisconnect());
@@ -167,14 +182,18 @@ namespace Celeste.Mod.CelesteNet.Server {
             // This only checks against same clientID, not instanceID at the moment
             // i.e. currently you can only have one connection per installation, not per individual running instance...
             // but since we check for name being the same, you could set different guest names for many clients on same connection/installation
-            if (ClientOptions.ClientID != 0) {
-                using (Server.ConLock.R()) {
-                    foreach (CelesteNetPlayerSession other in Server.Sessions) {
-                        if ( other != this && other.Name == Name
+            if (ClientOptions.ClientID != 0)
+            {
+                using (Server.ConLock.R())
+                {
+                    foreach (CelesteNetPlayerSession other in Server.Sessions)
+                    {
+                        if (other != this && other.Name == Name
                                            && other.UID == UID
                                            && other.Con.UID == Con.UID
                                            && other.ClientOptions.ClientID == ClientOptions.ClientID
-                           ) {
+                           )
+                        {
                             // disconnect this client because this is a reconnecting client
                             other.Dispose();
                             other.Con.Send(new DataDisconnectReason { Text = "Connection resumed elsewhere." });
@@ -185,19 +204,23 @@ namespace Celeste.Mod.CelesteNet.Server {
             }
 
             // generate more easily memorable persistent Guest name like "GuestDashingMadeline"
-            if (Name == "Guest") {
-                Random rnd = new Random(ClientOptions.ClientID != 0 ? (int) ClientOptions.ClientID : UID.GetHashCode());
+            if (Name == "Guest")
+            {
+                Random rnd = new Random(ClientOptions.ClientID != 0 ? (int)ClientOptions.ClientID : UID.GetHashCode());
                 string prefix = "", character = "";
-                while (prefix == character) {
+                while (prefix == character)
+                {
                     prefix = rnd.Choose(GuestNamePrefixes);
                     character = rnd.Choose(GuestNameCharacter);
                 }
                 fullName = fullNameSpace = $"Guest{prefix}{character}";
             }
 
-            using (Server.ConLock.R()) {
+            using (Server.ConLock.R())
+            {
                 int i = 1;
-                while (true) {
+                while (true)
+                {
                     bool conflict = false;
                     foreach (CelesteNetPlayerSession other in Server.Sessions)
                         if (conflict = other.PlayerInfo?.FullName == fullName)
@@ -220,8 +243,10 @@ namespace Celeste.Mod.CelesteNet.Server {
             else
                 avatarStream = Server.UserData.ReadFile(UID, "avatar.png");
 
-            using (avatarStream) {
-                if (avatarStream != null) {
+            using (avatarStream)
+            {
+                if (avatarStream != null)
+                {
                     string avatarId = $"celestenet_avatar_{SessionID}_";
                     displayName = $":{avatarId}: {fullNameSpace}";
 
@@ -229,12 +254,14 @@ namespace Celeste.Mod.CelesteNet.Server {
                     List<DataNetEmoji> avatarFrags = new();
                     byte[] buf = new byte[Server.Settings.MaxPacketSize / 2];
                     int fragSize, seqNum = 0;
-                    while ((fragSize = avatarStream.Read(buf, 0, buf.Length)) > 0) {
+                    while ((fragSize = avatarStream.Read(buf, 0, buf.Length)) > 0)
+                    {
                         byte[] frag = new byte[fragSize];
                         Buffer.BlockCopy(buf, 0, frag, 0, fragSize);
                         if (avatarFrags.Count > 0)
                             avatarFrags[avatarFrags.Count - 1].MoreFragments = true;
-                        avatarFrags.Add(new DataNetEmoji {
+                        avatarFrags.Add(new DataNetEmoji
+                        {
                             ID = avatarId,
                             Data = frag,
                             SequenceNumber = seqNum++,
@@ -244,12 +271,14 @@ namespace Celeste.Mod.CelesteNet.Server {
 
                     // Turn avatar fragments into blobs
                     AvatarFragments = avatarFrags.Select(frag => DataInternalBlob.For(Server.Data, frag)).ToArray();
-                } else
+                }
+                else
                     AvatarFragments = Dummy<DataInternalBlob>.EmptyArray;
             }
 
             // Create the player's PlayerInfo
-            DataPlayerInfo playerInfo = new() {
+            DataPlayerInfo playerInfo = new()
+            {
                 ID = SessionID,
                 Name = Name,
                 FullName = fullName,
@@ -260,6 +289,19 @@ namespace Celeste.Mod.CelesteNet.Server {
 
             Logger.Log(LogLevel.INF, "playersession", $"Session #{SessionID} PlayerInfo: {playerInfo} (UID: {UID}; Con: {Con.UID})");
             Logger.Log(LogLevel.VVV, "playersession", $"Session #{SessionID} @ {DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond}");
+
+            Server.UserData.TryLoad(UID, out WhiteListInfo whitelisted);
+
+            Logger.Log(LogLevel.INF, "playersession", $"WhiteListInfo {whitelisted.UID}");
+            if (whitelisted.UID != UID && Server.Settings.IsWhitelisted)
+            {
+                Logger.Log(LogLevel.VVV, "playersession", $"Session #{SessionID} disconnecting because of whitelist.");
+                Con.Send(new DataDisconnectReason { Text = "You are not whitelisted on this server" });
+                Con.Send(new DataInternalDisconnect());
+                Dispose();
+                return;
+            }
+
 
             // Send packets to players
             DataInternalBlob blobPlayerInfo = DataInternalBlob.For(Server.Data, playerInfo);
@@ -275,7 +317,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             int blobSendsOut = 0, avaSendsOut = 0;
             int boundSends = 0;
             using (Server.ConLock.R())
-                foreach (CelesteNetPlayerSession other in Server.Sessions) {
+                foreach (CelesteNetPlayerSession other in Server.Sessions)
+                {
                     if (other == this)
                         continue;
 
@@ -286,8 +329,10 @@ namespace Celeste.Mod.CelesteNet.Server {
                     other.Con.Send(blobPlayerInfo);
                     blobSendsOut++;
 
-                    if (!other.ClientOptions.AvatarsDisabled) {
-                        foreach (DataInternalBlob fragBlob in AvatarFragments) {
+                    if (!other.ClientOptions.AvatarsDisabled)
+                    {
+                        foreach (DataInternalBlob fragBlob in AvatarFragments)
+                        {
                             other.Con.Send(fragBlob);
                             avaSendsOut++;
                         }
@@ -315,7 +360,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             => WaitFor(0, cb, null);
 
         public Action WaitFor<T>(int timeout, DataFilter<T> cb, Action? cbTimeout = null) where T : DataType<T>
-            => Server.Data.WaitFor<T>(timeout, (con, data) => {
+            => Server.Data.WaitFor<T>(timeout, (con, data) =>
+            {
                 if (Con != con)
                     return false;
                 return cb(con, data);
@@ -330,8 +376,10 @@ namespace Celeste.Mod.CelesteNet.Server {
         public Action Request<T>(DataType req, DataHandler<T> cb) where T : DataType<T>, IDataRequestable
             => Request(0, req, cb, null);
 
-        public Action Request<T>(int timeout, DataType req, DataHandler<T> cb, Action? cbTimeout = null) where T : DataType<T>, IDataRequestable {
-            using (req.UpdateMeta(Server.Data)) {
+        public Action Request<T>(int timeout, DataType req, DataHandler<T> cb, Action? cbTimeout = null) where T : DataType<T>, IDataRequestable
+        {
+            using (req.UpdateMeta(Server.Data))
+            {
                 if (!req.TryGet(Server.Data, out MetaRequest? mreq))
                     mreq = new();
                 lock (RequestNextIDLock)
@@ -339,7 +387,8 @@ namespace Celeste.Mod.CelesteNet.Server {
                 req.Set(Server.Data, mreq);
             }
 
-            Action cancel = WaitFor<T>(timeout, (con, data) => {
+            Action cancel = WaitFor<T>(timeout, (con, data) =>
+            {
                 if (req.TryGet(Server.Data, out MetaRequest? mreq) &&
                     data.TryGet(Server.Data, out MetaRequestResponse? mres) &&
                     mreq.ID != mres.ID)
@@ -353,7 +402,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             return cancel;
         }
 
-        public void ResendPlayerStates() {
+        public void ResendPlayerStates()
+        {
             Channel channel = Channel;
 
             ILookup<bool, DataInternalBlob> boundAll = Server.Data.GetBoundRefs(PlayerInfo)
@@ -365,16 +415,20 @@ namespace Celeste.Mod.CelesteNet.Server {
             Logger.Log(LogLevel.VVV, "playersession", $"Session #{SessionID} - Doing player state resends");
             int boundPrivOut = 0, boundPublicOut = 0, boundPrivNew = 0;
             using (Server.ConLock.R())
-                foreach (CelesteNetPlayerSession other in Server.Sessions) {
+                foreach (CelesteNetPlayerSession other in Server.Sessions)
+                {
                     if (other == this)
                         continue;
 
-                    foreach (DataType bound in boundAllPublic) {
+                    foreach (DataType bound in boundAllPublic)
+                    {
                         other.Con.Send(bound);
                         boundPublicOut++;
                     }
-                    foreach (DataType bound in boundAllPrivate) {
-                        if (channel == other.Channel) {
+                    foreach (DataType bound in boundAllPrivate)
+                    {
+                        if (channel == other.Channel)
+                        {
                             other.Con.Send(bound);
                             boundPrivOut++;
                         }
@@ -385,7 +439,8 @@ namespace Celeste.Mod.CelesteNet.Server {
                         continue;
 
                     foreach (DataType bound in Server.Data.GetBoundRefs(otherInfo))
-                        if (!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) {
+                        if (!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel)
+                        {
                             Con.Send(bound);
                             boundPrivNew++;
                         }
@@ -398,15 +453,17 @@ namespace Celeste.Mod.CelesteNet.Server {
             => Server.Data.TryGetBoundRef(PlayerInfo, out DataPlayerState? state) && state != null && IsSameArea(Channel, state, other);
 
         public bool IsSameArea(Channel channel, DataPlayerState? state, CelesteNetPlayerSession other)
-            =>  state != null &&
+            => state != null &&
                 other.Channel == channel &&
                 Server.Data.TryGetBoundRef(other.PlayerInfo, out DataPlayerState? otherState) &&
                 otherState != null &&
                 otherState.SID == state.SID &&
                 otherState.Mode == state.Mode;
 
-        public bool ConSendFilter(CelesteNetConnection con, DataType data) {
-            if (FilterList != null) {
+        public bool ConSendFilter(CelesteNetConnection con, DataType data)
+        {
+            if (FilterList != null)
+            {
                 string source = data.GetSource(Server.Data);
                 return string.IsNullOrEmpty(source) || FilterList.Contains(source);
             }
@@ -414,8 +471,10 @@ namespace Celeste.Mod.CelesteNet.Server {
             return true;
         }
 
-        public void SendCommandList(DataCommandList commands) {
-            if (commands == null || commands.List.Length == 0) {
+        public void SendCommandList(DataCommandList commands)
+        {
+            if (commands == null || commands.List.Length == 0)
+            {
                 return;
             }
 
@@ -424,23 +483,26 @@ namespace Celeste.Mod.CelesteNet.Server {
 
             bool auth = false;
             bool authExec = false;
-            if (!(UID?.IsNullOrEmpty() ?? true) && Server.UserData.TryLoad(UID, out BasicUserInfo info)) {
+            if (!(UID?.IsNullOrEmpty() ?? true) && Server.UserData.TryLoad(UID, out BasicUserInfo info))
+            {
                 auth = info.Tags.Contains(BasicUserInfo.TAG_AUTH);
                 authExec = info.Tags.Contains(BasicUserInfo.TAG_AUTH_EXEC);
             }
 
-            filteredCommands.List = commands.List.Where(cmd => {
-                    return (!cmd.Auth || auth)
-                    && (!cmd.AuthExec || authExec)
-                    && CheckClientFeatureSupport(cmd.RequiredFeatures);
-                }).ToArray();
+            filteredCommands.List = commands.List.Where(cmd =>
+            {
+                return (!cmd.Auth || auth)
+                && (!cmd.AuthExec || authExec)
+                && CheckClientFeatureSupport(cmd.RequiredFeatures);
+            }).ToArray();
 
             Con.Send(filteredCommands);
         }
 
         public event Action<CelesteNetPlayerSession, DataPlayerInfo?>? OnEnd;
 
-        public void Dispose() {
+        public void Dispose()
+        {
             if (Interlocked.Exchange(ref _Alive, 0) <= 0)
                 return;
 
@@ -449,7 +511,8 @@ namespace Celeste.Mod.CelesteNet.Server {
             DataPlayerInfo? playerInfoLast = PlayerInfo;
 
             if (playerInfoLast != null)
-                Server.BroadcastAsync(new DataPlayerInfo {
+                Server.BroadcastAsync(new DataPlayerInfo
+                {
                     ID = SessionID
                 });
 
@@ -467,7 +530,8 @@ namespace Celeste.Mod.CelesteNet.Server {
 
         #region Handlers
 
-        public bool Filter(CelesteNetConnection con, DataPlayerInfo updated) {
+        public bool Filter(CelesteNetConnection con, DataPlayerInfo updated)
+        {
             // Make sure that a player can only update their own info.
             if (con != Con)
                 return true;
@@ -484,29 +548,34 @@ namespace Celeste.Mod.CelesteNet.Server {
             return true;
         }
 
-        public bool Filter(CelesteNetConnection con, DataType data) {
+        public bool Filter(CelesteNetConnection con, DataType data)
+        {
             if (con != Con)
                 return true;
 
             bool fixup = false;
             DataPlayerInfo? player = null;
 
-            if (data.TryGet(Server.Data, out MetaPlayerUpdate? update)) {
+            if (data.TryGet(Server.Data, out MetaPlayerUpdate? update))
+            {
                 update.Player = player ??= PlayerInfo;
                 fixup = true;
             }
 
-            if (data.TryGet(Server.Data, out MetaPlayerPrivateState? state)) {
+            if (data.TryGet(Server.Data, out MetaPlayerPrivateState? state))
+            {
                 state.Player = player ??= PlayerInfo;
                 fixup = true;
             }
 
-            if (data.TryGet(Server.Data, out MetaPlayerPublicState? statePub)) {
+            if (data.TryGet(Server.Data, out MetaPlayerPublicState? statePub))
+            {
                 statePub.Player = player ??= PlayerInfo;
                 fixup = true;
             }
 
-            if (data.TryGet(Server.Data, out MetaBoundRef? boundRef) && boundRef.TypeBoundTo == DataPlayerInfo.DataID) {
+            if (data.TryGet(Server.Data, out MetaBoundRef? boundRef) && boundRef.TypeBoundTo == DataPlayerInfo.DataID)
+            {
                 boundRef.ID = (player ?? PlayerInfo)?.ID ?? uint.MaxValue;
                 fixup = true;
             }
@@ -517,42 +586,48 @@ namespace Celeste.Mod.CelesteNet.Server {
             return true;
         }
 
-        public bool Filter(CelesteNetConnection con, DataPlayerFrame frame) {
+        public bool Filter(CelesteNetConnection con, DataPlayerFrame frame)
+        {
             if (frame.Followers.Length > Server.Settings.MaxFollowers)
                 Array.Resize(ref frame.Followers, Server.Settings.MaxFollowers);
 
             return true;
         }
 
-        public bool Filter(CelesteNetConnection con, DataPlayerGraphics graphics) {
+        public bool Filter(CelesteNetConnection con, DataPlayerGraphics graphics)
+        {
             if (graphics.HairCount > Server.Settings.MaxHairLength)
                 graphics.HairCount = Server.Settings.MaxHairLength;
             // don't really need to resize arrays if they're bigger; it'll only send up to graphics.HairCount
             return true;
         }
 
-        public void Handle(CelesteNetConnection con, DataPlayerInfo updated) {
+        public void Handle(CelesteNetConnection con, DataPlayerInfo updated)
+        {
             if (con != Con)
                 return;
 
             DataInternalBlob blob = new(Server.Data, updated);
 
             using (Server.ConLock.R())
-                foreach (CelesteNetPlayerSession other in Server.Sessions) {
+                foreach (CelesteNetPlayerSession other in Server.Sessions)
+                {
                     if (other == this)
                         continue;
 
                     other.Con.Send(blob);
                 }
         }
-        public void Handle(CelesteNetConnection con, DataNetFilterList list) {
+        public void Handle(CelesteNetConnection con, DataNetFilterList list)
+        {
             if (con != Con)
                 return;
 
             FilterList = list;
         }
 
-        public void Handle(CelesteNetConnection con, DataType data) {
+        public void Handle(CelesteNetConnection con, DataType data)
+        {
             if (con != Con)
                 return;
 
@@ -563,14 +638,16 @@ namespace Celeste.Mod.CelesteNet.Server {
             bool isUpdate = data.Is<MetaPlayerUpdate>(Server.Data);
             if (data.Is<MetaPlayerPublicState>(Server.Data) ||
                 isPrivate ||
-                isUpdate) {
+                isUpdate)
+            {
                 Channel channel = Channel;
 
                 DataInternalBlob blob = new(Server.Data, data);
 
                 HashSet<CelesteNetPlayerSession> others = isPrivate || isUpdate ? channel.Players : Server.Sessions;
-                using (isPrivate || isUpdate ? channel.Lock.R() :  Server.ConLock.R())
-                    foreach (CelesteNetPlayerSession other in others) {
+                using (isPrivate || isUpdate ? channel.Lock.R() : Server.ConLock.R())
+                    foreach (CelesteNetPlayerSession other in others)
+                    {
                         if (other == this)
                             continue;
 
