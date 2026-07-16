@@ -164,7 +164,17 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
             }
 
             string key = f.Server.UserData.Create(uid, false);
-            BasicUserInfo info = f.Server.UserData.Load<BasicUserInfo>(uid);
+            bool existing = f.Server.UserData.TryLoad(uid, out BasicUserInfo info);
+
+            // Try migration
+            if (!existing && provider == "discord") {
+                if (f.Server.UserData.TryLoad(platformUid, out info)) {
+                    f.Server.UserData.Delete<BasicUserInfo>(platformUid);
+
+                    string oldKey = f.Server.UserData.Create(platformUid, false);
+                    f.Server.UserData.RevokeKey(oldKey);
+                }
+            }
 
             if ((string?)userData?.SelectTokens(oauthProvider.ServiceUserJsonPathName).FirstOrDefault() is string global_name && !global_name.IsNullOrEmpty()) {
                 info.Name = global_name;
