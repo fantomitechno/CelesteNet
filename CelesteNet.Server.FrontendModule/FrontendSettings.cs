@@ -31,6 +31,8 @@ namespace Celeste.Mod.CelesteNet.Server.Control
 
             public string ServiceUserAPI { get; set; } = "";
 
+            public bool ProvideClientIdInHeaders { get; set; } = false;
+
             public string ServiceUserJsonPathUid { get; set; } = "$.id";
 
             public string ServiceUserJsonPathName { get; set; } = "$.username";
@@ -55,6 +57,7 @@ namespace Celeste.Mod.CelesteNet.Server.Control
                       OAuthPathAuthorize = "https://discord.com/oauth2/authorize",
                       OAuthPathToken = "https://discord.com/api/oauth2/token",
                       ServiceUserAPI = "https://discord.com/api/users/@me",
+                      ProvideClientIdInHeaders = false,
                       ServiceUserJsonPathUid = "$.id",
                       ServiceUserJsonPathName = "$.['global_name', 'username']",
                       ServiceUserJsonPathPfp = "$.avatar",

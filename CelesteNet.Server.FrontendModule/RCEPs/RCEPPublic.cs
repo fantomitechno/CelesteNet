@@ -123,13 +123,19 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
                 if (tokenType == "bearer")
                     tokenType = "Bearer";
 
-                using (Stream s = client.SendAsync(new HttpRequestMessage {
+                HttpRequestMessage requestMessage = new() {
                     RequestUri = new(oauthProvider.ServiceUserAPI),
                     Method = HttpMethod.Get,
                     Headers = {
                         { "Authorization", $"{tokenType} {token}" }
                     }
-                }).Await().Content.ReadAsStreamAsync().Await())
+                };
+
+                if (oauthProvider.ProvideClientIdInHeaders) {
+                    requestMessage.Headers.Add("Client-Id", oauthProvider.OAuthClientID);
+                }
+
+                using (Stream s = client.SendAsync(requestMessage).Await().Content.ReadAsStreamAsync().Await())
                 using (StreamReader sr = new(s))
                     userData = JObject.Parse(sr.ReadToEnd());
             }
