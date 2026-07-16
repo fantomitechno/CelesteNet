@@ -9,6 +9,10 @@ const elDim = document.getElementById("dim");
 const elDialog = document.getElementById("dialog");
 const elDialogText = document.getElementById("dialog-text");
 
+function capitalizeFirst(str) {
+	return str[0].toUpperCase() + str.slice(1);
+}
+
 function li(value) {
 	return el => rd$(el)`<li>${value}</li>`;
 }
@@ -92,29 +96,37 @@ function renderUser() {
 		const list = new RDOMListHelper(el);
 
 		if (info.Error) {
-			list.add("linkerror", el => rd$(el)`
-			<p>
-				Create a CelesteNet account to show your profile picture in-game and to let the server remember your last channel and command settings.<br>
-				<br>
-				<a id="button-auth" class="button" href="/api/discordauth"><span class="button-icon"></span><span>Link your Discord account</span></a><br>
-				<sub style="line-height: 0.5em;">
-					Linking your account is fully optional and requires telling your browser to store a "cookie." This cookie is only used to keep you logged in.
-				</sub>
-			</p>`);
+			fetch(`${apiroot}/available-oauth`).then(r => r.json()).then(oauths => {
+				console.log(oauths)
+				let $oauthElements = ``;
+				for (const oauth of oauths) {
+					$oauthElements += `<a id="button-auth" class="button" href="/api/oauth?provider=${oauth}"><span class="button-icon"></span><span>Link your ${capitalizeFirst(oauth)} account</span></a><br>`
+				}
+				// using raw innerHtml instead of the rendering function because of the dynamic button
+				el.innerHTML = `
+				<p>
+					Create a CelesteNet account to show your profile picture in-game and to let the server remember your last channel and command settings.<br>
+					<br>
+					${$oauthElements}
+					<sub style="line-height: 0.5em;">
+						Linking your account is fully optional and requires telling your browser to store a "cookie." This cookie is only used to keep you logged in.
+					</sub>
+				</p>`;
 
-			// list.add("error", li(info.Error));
-			list.end();
+				// list.add("error", li(info.Error));
+				list.end();
+			})
 			return;
 		}
 
 		list.add("userinfo", el => rd$(el)`
 		<p>
 			Linked to:<br>
-			<a id="button-reauth" class="button" href="/api/discordauth">
+			<a id="button-reauth" class="button" href=${`/api/oauth?provider=${info.UID.split("-")[0]}`}>
 				<span class="button-icon"></span>
 				<span class="button-text">
 					<span class="button-icon discord-avatar" style=${`background-image: url(/api/avatar?uid=${info.UID})`}></span>
-					${info.Discrim == "" || info.Discrim == "0" ? `${info.Name}` : `${info.Name}#${info.Discrim}`}
+					${(info.Discrim == "" || info.Discrim == "0" ? `${info.Name}` : `${info.Name}#${info.Discrim}`) + ` via ${capitalizeFirst(info.UID.split("-")[0])}`} 
 				</span>
 			</a>
 		</p>`);

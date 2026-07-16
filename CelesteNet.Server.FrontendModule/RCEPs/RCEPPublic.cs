@@ -212,6 +212,13 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
             });
         }
 
+        [RCEndpoint(false, "/available-oauth", "", "", "Available Oauth2 provider", "Get all the provider available on this CelesteNet server")]
+        public static void AvailableOauth(Frontend f, HttpRequestEventArgs c) {
+            
+
+            f.RespondJSON(c, f.Settings.OAuthProviders.ToList().Select(t => t.Key).ToArray());
+        }
+
         private static IImageProcessingContext ApplyTagOverlays(this IImageProcessingContext context, Frontend f, BasicUserInfo info) {
             foreach (string tagName in info.Tags) {
                 using Stream? asset = f.OpenContent($"frontend/assets/tags/{tagName}.png", out _, out _, out _);
