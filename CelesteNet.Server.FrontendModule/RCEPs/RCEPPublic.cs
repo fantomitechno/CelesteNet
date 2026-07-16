@@ -87,6 +87,8 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
                 return;
             }
 
+            provider = splitState[0];
+
             dynamic? tokenData;
             JObject? userData;
 
@@ -115,7 +117,7 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
                     Logger.Log(LogLevel.CRI, "frontend-oauth", $"Failed to obtain token: {tokenData}");
                     c.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
                     f.RespondJSON(c, new {
-                        Error = "Couldn't obtain access token from Discord."
+                        Error = $"Couldn't obtain access token from {provider}."
                     });
                     return;
                 }
@@ -150,6 +152,9 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
                 return;
             }
 
+            string platformUid = uid;
+            uid = $"{provider}-{uid}";
+
             if (f.Server.UserData.TryLoad(uid, out BanInfo banInfo) && banInfo != null) {
                 c.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 f.RespondJSON(c, new {
@@ -176,7 +181,7 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
 
             Image avatarOrig;
             using (HttpClient client = new()) {
-                string avatarURL = string.Format(oauthProvider.ServiceUserAvatarURL, new object[] { uid, pfpFragment ?? "" });
+                string avatarURL = string.Format(oauthProvider.ServiceUserAvatarURL, new object[] { platformUid, pfpFragment ?? "" });
                 try {
                     using Stream s = client.GetAsync(avatarURL).Await().Content.ReadAsStreamAsync().Await();
                     avatarOrig = Image.Load<Rgba32>(s);
