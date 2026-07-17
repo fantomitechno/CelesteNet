@@ -92,6 +92,8 @@ namespace Celeste.Mod.CelesteNet.Server.API
       var res = Client.GetAsync(Settings.ApiBase + "/userinfo?key=" + key).Await();
       var json = res.Content.ReadFromJsonAsync<RequestData>().Await();
 
+      Logger.Log(LogLevel.DEV, "APIUserData(GetUID)", "Contacting: " + Settings.ApiBase + "/userinfo.");
+
       if (json == null)
       {
         return "";
@@ -169,6 +171,7 @@ namespace Celeste.Mod.CelesteNet.Server.API
         var res = Client.GetAsync(Settings.ApiBase + "/userinfo?uid=" + uid).Await();
         var json = res.Content.ReadFromJsonAsync<T>().Await();
 
+        Logger.Log(LogLevel.DEV, "APIUserData(TryLoad)", "Contacting: " + Settings.ApiBase + "/userinfo.");
         if (json == null)
         {
           return false;

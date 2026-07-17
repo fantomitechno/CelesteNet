@@ -247,6 +247,124 @@ export class FrontendDialog {
     return dialog;
   }
 
+  wlrm(fullname, id) {
+    const input = (id, gen) => el => {
+      el = gen(el);
+      el.id = id;
+      let input = el.querySelector("input");
+      let label = el.querySelector("label");
+      input.id = `${id}-kick-input`;
+      if (label)
+        label.setAttribute("for", input.id);
+      return el;
+    }
+    const row = (label, body) => el => rd$(el)`<span class="row"><span class="label">${label}</span><span class="body">${body}</span></span>`;
+    const group = (...items) => el => {
+      el = rd$(el)`<ul class="settings-group"></ul>`;
+
+      let list = new RDOMListHelper(el);
+      for (let i in items) {
+        list.add(i, items[i]);
+      }
+      list.end();
+
+      return el;
+    }
+
+    let el = this.elPopupKick = mdcrd.dialog({
+      title: `Kick ${fullname} (#${id})`,
+      body: el => rd$(el)`
+      <div>
+        ${group(
+            row(`Player ID: ${id}`),
+          )
+        }
+      </div>`,
+      defaultButton: "yes",
+      buttons: ["OK"],
+    })(this.elPopupKick);
+
+    document.body.appendChild(el);
+
+    /** @type {import("@material/dialog").MDCDialog & Promise<string>} */
+    let dialog = el["MDCDialog"];
+
+    dialog.open();
+
+    let promise = new Promise(resolve => el.addEventListener("MDCDialog:closed", e => resolve(e["detail"]["action"] === "0"), { once: true }));
+    dialog["then"] = promise.then.bind(promise);
+    dialog["catch"] = promise.catch.bind(promise);
+
+    dialog.then(
+      wl => {
+        if (!wl)
+          return;
+        this.frontend.sync.run("wlrm", id);
+      }
+    );
+
+    return dialog;
+  }
+
+  wladd(fullname, id) {
+    const input = (id, gen) => el => {
+      el = gen(el);
+      el.id = id;
+      let input = el.querySelector("input");
+      let label = el.querySelector("label");
+      input.id = `${id}-kick-input`;
+      if (label)
+        label.setAttribute("for", input.id);
+      return el;
+    }
+    const row = (label, body) => el => rd$(el)`<span class="row"><span class="label">${label}</span><span class="body">${body}</span></span>`;
+    const group = (...items) => el => {
+      el = rd$(el)`<ul class="settings-group"></ul>`;
+
+      let list = new RDOMListHelper(el);
+      for (let i in items) {
+        list.add(i, items[i]);
+      }
+      list.end();
+
+      return el;
+    }
+
+    let el = this.elPopupKick = mdcrd.dialog({
+      title: `Kick ${fullname} (#${id})`,
+      body: el => rd$(el)`
+      <div>
+        ${group(
+            row(`Player ID: ${id}`),
+          )
+        }
+      </div>`,
+      defaultButton: "yes",
+      buttons: ["OK"],
+    })(this.elPopupKick);
+
+    document.body.appendChild(el);
+
+    /** @type {import("@material/dialog").MDCDialog & Promise<string>} */
+    let dialog = el["MDCDialog"];
+
+    dialog.open();
+
+    let promise = new Promise(resolve => el.addEventListener("MDCDialog:closed", e => resolve(e["detail"]["action"] === "0"), { once: true }));
+    dialog["then"] = promise.then.bind(promise);
+    dialog["catch"] = promise.catch.bind(promise);
+
+    dialog.then(
+      wl => {
+        if (!wl)
+          return;
+        this.frontend.sync.run("wladd", id);
+      }
+    );
+
+    return dialog;
+  }
+
   ban(fullname, id, ...uids) {
     const input = (id, cls, val, gen) => el => {
       el = gen(el);

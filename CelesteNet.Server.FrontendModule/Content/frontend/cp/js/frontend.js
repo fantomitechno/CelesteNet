@@ -51,6 +51,7 @@ export class Frontend {
       "accounts",
       "players",
       "channels",
+      "whitelist",
       "cmd",
       "chat",
       "notes",

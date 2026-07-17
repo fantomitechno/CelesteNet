@@ -317,6 +317,15 @@ namespace Celeste.Mod.CelesteNet.Server.Control {
             }).ToArray());
         }
 
+        [RCEndpoint(true, "/whitelist", "", "", "WhiteList", "Get the WhiteList.")]
+        public static void WhiteList(Frontend f, HttpRequestEventArgs c) {
+            using UserDataBatchContext ctx = f.Server.UserData.OpenBatch();
+
+            List<string> whiteList = f.Server.UserData.LoadAll<WhiteListInfo>().Keys.ToList();
+
+            f.RespondJSON(c, whiteList.ToArray());
+        }
+
         [RCEndpoint(true,
             "/userinfosfiltered",
             "?onlyspecial={true|false}&forcereload={true|false}&from={first}&count={count}&search={search}",

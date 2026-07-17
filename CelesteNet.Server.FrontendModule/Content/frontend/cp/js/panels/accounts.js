@@ -297,7 +297,9 @@ export class FrontendAccountsPanel extends FrontendBasicPanel {
               this.frontend.sync.run("unban", p.UID);
             }
           } ],
-          [ "content_copy", `Copy UID: ${p.UID}`, () =>  navigator.clipboard.writeText(p.UID) ]
+          [ "gavel", `Whitelist ${p.Name || p.UID}`, () =>  this.frontend.dialog.wladd(p.Name, p.UID)],
+          [ "gavel", `Unwhitelist ${p.Name || p.UID}`, () =>  this.frontend.dialog.wlrm(p.Name, p.UID)],
+          [ "content_copy", `Copy UID: ${p.UID}`, () =>  navigator.clipboard.writeText(p.UID) ],
       ];
 
       if (p.Name)
