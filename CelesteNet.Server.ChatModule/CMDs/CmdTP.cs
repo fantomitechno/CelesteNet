@@ -4,8 +4,10 @@ using Celeste.Mod.CelesteNet.DataTypes;
 using Microsoft.Xna.Framework;
 using MonoMod.Utils;
 
-namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
-    public class CmdTP : ChatCmd {
+namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
+{
+    public class CmdTP : ChatCmd
+    {
 
         public override CompletionType Completion => CompletionType.Player;
 
@@ -15,7 +17,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
         private DataPlayerInfo? OtherPlayer;
         private DataPlayerState? OtherState;
 
-        public override void Init(ChatModule chat) {
+        public override void Init(ChatModule chat)
+        {
             Chat = chat;
 
             ArgParser parser = new(chat, this);
@@ -23,7 +26,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
             ArgParsers.Add(parser);
         }
 
-        private void ValidatePlayerSession(string raw, CmdEnv env, ICmdArg arg) {
+        private void ValidatePlayerSession(string raw, CmdEnv env, ICmdArg arg)
+        {
             CelesteNetPlayerSession? self = env.Session;
             if (self == null || env.Player == null)
                 throw new CommandRunException("Are you trying to TP as the server?");
@@ -50,7 +54,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
             OtherState = otherState;
         }
 
-        public override void Run(CmdEnv env, List<ICmdArg>? args) {
+        public override void Run(CmdEnv env, List<ICmdArg>? args)
+        {
             CelesteNetPlayerSession? self = env.Session;
 
             if (self == null || Other == null || OtherPlayer == null || OtherState == null)
@@ -67,8 +72,10 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
             );
         }
 
-        private bool SaveAndTeleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? savedSession, Vector2? savedPos) {
-            new DynamicData(self).Set("tpHistory", new TPHistoryEntry {
+        private bool SaveAndTeleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? savedSession, Vector2? savedPos)
+        {
+            new DynamicData(self).Set("tpHistory", new TPHistoryEntry
+            {
                 State = env.State,
                 Session = savedSession,
                 Position = savedPos
@@ -84,9 +91,12 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
             return true;
         }
 
-        private bool Teleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? tpSession, Vector2? tpPos) {
-            if (msg != null) {
-                self.WaitFor<DataPlayerState>(6000, (con, state) => {
+        private bool Teleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? tpSession, Vector2? tpPos)
+        {
+            if (msg != null)
+            {
+                self.WaitFor<DataPlayerState>(6000, (con, state) =>
+                {
                     if (state.SID != otherState.SID ||
                         state.Mode != otherState.Mode ||
                         state.Level != otherState.Level)
@@ -96,13 +106,16 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
                     Chat.ForceSend(msg);
                     return true;
 
-                }, () => {
+                }, () =>
+                {
                     msg.Text = $"Couldn't teleport to {otherPlayer.FullName} - maybe missing map?";
                     Chat.ForceSend(msg);
 
-                    other.Request<DataMapModInfo>(1000, (con, info) => {
+                    other.Request<DataMapModInfo>(1000, (con, info) =>
+                    {
                         if (!string.IsNullOrEmpty(info.ModID))
-                            self.Con.Send(new DataModRec {
+                            self.Con.Send(new DataModRec
+                            {
                                 ModID = info.ModID,
                                 ModName = info.ModName,
                                 ModVersion = info.ModVersion
@@ -111,7 +124,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
                 });
             }
 
-            self.Con.Send(new DataMoveTo {
+            self.Con.Send(new DataMoveTo
+            {
                 SID = otherState.SID,
                 Mode = otherState.Mode,
                 Level = otherState.Level,
@@ -124,18 +138,21 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
 
     }
 
-    public class CmdTPOn : ChatCmd {
+    public class CmdTPOn : ChatCmd
+    {
 
         public override string Info => "Allow others to teleport to you.";
 
-        public override void Run(CmdEnv env, List<ICmdArg>? args) {
+        public override void Run(CmdEnv env, List<ICmdArg>? args)
+        {
             if (env.Session == null)
                 return;
 
             if (env.Server.UserData.GetKey(env.Session.UID).IsNullOrEmpty())
                 throw new CommandRunException("You must be registered to enable / disable teleports!");
 
-            env.Server.UserData.Save(env.Session.UID, new TPSettings {
+            env.Server.UserData.Save(env.Session.UID, new TPSettings
+            {
                 Enabled = true
             });
             env.Send("Others can teleport to you now.");
@@ -143,18 +160,21 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
 
     }
 
-    public class CmdTPOff : ChatCmd {
+    public class CmdTPOff : ChatCmd
+    {
 
         public override string Info => "Prevent others from teleporting to you.";
 
-        public override void Run(CmdEnv env, List<ICmdArg>? args) {
+        public override void Run(CmdEnv env, List<ICmdArg>? args)
+        {
             if (env.Session == null)
                 return;
 
             if (env.Server.UserData.GetKey(env.Session.UID).IsNullOrEmpty())
                 throw new CommandRunException("You must be registered to enable / disable teleports!");
 
-            env.Server.UserData.Save(env.Session.UID, new TPSettings {
+            env.Server.UserData.Save(env.Session.UID, new TPSettings
+            {
                 Enabled = false
             });
             env.Send("Others can't teleport to you anymore.");
@@ -162,11 +182,127 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd {
 
     }
 
-    public class TPSettings : IUserDataType {
+    public class CmdTPAll : ChatCmd
+    {
+
+        public override string Info => "Teleport everyone in the lobby to you.";
+
+        public override bool MustAuth => true;
+
+        public override void Run(CmdEnv env, List<ICmdArg>? args)
+        {
+            CelesteNetPlayerSession? self = env.Session;
+
+            if (env.Player == null)
+                throw new CommandRunException("Are you trying to TP players to the datacenter?");
+
+            if (self == null)
+                throw new InvalidOperationException("This shouldn't happen, if ArgTypePlayerSession parsed successfully...");
+
+            DataChat? msg = env.Send($"Teleporting everyone to {env.Player.FullName}");
+
+
+
+            if (!env.Server.Data.TryGetBoundRef(env.Player, out DataPlayerState? selfState) ||
+                selfState == null ||
+                selfState.SID.IsNullOrEmpty())
+                throw new CommandRunException($"You aren't in-game.");
+
+            using (env.Server.ConLock.R())
+                foreach (CelesteNetPlayerSession other in env.Server.Sessions)
+                {
+                    if (other == self) continue;
+                    DataPlayerInfo? otherPlayer = other.PlayerInfo;
+                    if (otherPlayer == null)
+                        continue;
+
+                    if (env.Session?.Channel != other.Channel)
+                        continue;
+
+
+                    self.Request<DataSession>(400,
+                        (con, session) => self.WaitFor<DataPlayerFrame>(400,
+                            (con, frame) => SaveAndTeleport(env, msg, other, self, env.Player, selfState, session, frame.Position),
+                            () => SaveAndTeleport(env, msg, other, self, env.Player, selfState, session, null)
+                        ),
+                        () => SaveAndTeleport(env, msg, other, self, env.Player, selfState, null, null)
+                    );
+                }
+        }
+
+        private bool SaveAndTeleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? savedSession, Vector2? savedPos)
+        {
+            new DynamicData(self).Set("tpHistory", new TPHistoryEntry
+            {
+                State = env.State,
+                Session = savedSession,
+                Position = savedPos
+            });
+
+            other.Request<DataSession>(400,
+                (con, session) => other.WaitFor<DataPlayerFrame>(300,
+                    (con, frame) => Teleport(env, msg, self, other, otherPlayer, otherState, session, frame.Position),
+                    () => Teleport(env, msg, self, other, otherPlayer, otherState, session, null)
+                ),
+                () => Teleport(env, msg, self, other, otherPlayer, otherState, null, null)
+            );
+            return true;
+        }
+
+        private bool Teleport(CmdEnv env, DataChat? msg, CelesteNetPlayerSession self, CelesteNetPlayerSession other, DataPlayerInfo otherPlayer, DataPlayerState otherState, DataSession? tpSession, Vector2? tpPos)
+        {
+            if (msg != null)
+            {
+                self.WaitFor<DataPlayerState>(6000, (con, state) =>
+                {
+                    if (state.SID != otherState.SID ||
+                        state.Mode != otherState.Mode ||
+                        state.Level != otherState.Level)
+                        return false;
+
+                    msg.Text = $"Teleported to {otherPlayer.FullName}";
+                    Chat.ForceSend(msg);
+                    return true;
+
+                }, () =>
+                {
+                    msg.Text = $"Couldn't teleport to {otherPlayer.FullName} - maybe missing map?";
+                    Chat.ForceSend(msg);
+
+                    other.Request<DataMapModInfo>(1000, (con, info) =>
+                    {
+                        if (!string.IsNullOrEmpty(info.ModID))
+                            self.Con.Send(new DataModRec
+                            {
+                                ModID = info.ModID,
+                                ModName = info.ModName,
+                                ModVersion = info.ModVersion
+                            });
+                    });
+                });
+            }
+
+            self.Con.Send(new DataMoveTo
+            {
+                SID = otherState.SID,
+                Mode = otherState.Mode,
+                Level = otherState.Level,
+                Session = tpSession,
+                Position = tpPos
+            });
+
+            return true;
+        }
+
+    }
+
+    public class TPSettings : IUserDataType
+    {
         public bool Enabled { get; set; } = true;
     }
 
-    public class TPHistoryEntry {
+    public class TPHistoryEntry
+    {
         public DataPlayerState? State;
         public DataSession? Session;
         public Vector2? Position;
