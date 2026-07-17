@@ -87,6 +87,9 @@ namespace Celeste.Mod.CelesteNet.Server.API
 
     public override string GetUID(string key)
     {
+      string uid = Fallback.GetUID(key);
+      if (!uid.IsNullOrEmpty())
+        return uid;
       if (key.IsNullOrEmpty())
         return "";
       var res = Client.GetAsync(Settings.ApiBase + "/userinfo?key=" + key).Await();

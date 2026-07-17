@@ -57,6 +57,8 @@ namespace Celeste.Mod.CelesteNet.Server
 
         public Channel Channel;
 
+        public bool Vanished = false;
+
         public DataInternalBlob[] AvatarFragments = Dummy<DataInternalBlob>.EmptyArray;
 
         public HashSet<CelesteNetPlayerSession> AvatarSendQueue = new HashSet<CelesteNetPlayerSession>();
@@ -326,15 +328,18 @@ namespace Celeste.Mod.CelesteNet.Server
                     if (otherInfo == null)
                         continue;
 
-                    other.Con.Send(blobPlayerInfo);
-                    blobSendsOut++;
-
-                    if (!other.ClientOptions.AvatarsDisabled)
+                    if (!Vanished)
                     {
-                        foreach (DataInternalBlob fragBlob in AvatarFragments)
+                        other.Con.Send(blobPlayerInfo);
+                        blobSendsOut++;
+
+                        if (!other.ClientOptions.AvatarsDisabled)
                         {
-                            other.Con.Send(fragBlob);
-                            avaSendsOut++;
+                            foreach (DataInternalBlob fragBlob in AvatarFragments)
+                            {
+                                other.Con.Send(fragBlob);
+                                avaSendsOut++;
+                            }
                         }
                     }
 
@@ -427,7 +432,7 @@ namespace Celeste.Mod.CelesteNet.Server
                     }
                     foreach (DataType bound in boundAllPrivate)
                     {
-                        if (channel == other.Channel)
+                        if (channel == other.Channel && !Vanished)
                         {
                             other.Con.Send(bound);
                             boundPrivOut++;
@@ -612,7 +617,7 @@ namespace Celeste.Mod.CelesteNet.Server
             using (Server.ConLock.R())
                 foreach (CelesteNetPlayerSession other in Server.Sessions)
                 {
-                    if (other == this)
+                    if (other == this || Vanished)
                         continue;
 
                     other.Con.Send(blob);
@@ -656,7 +661,7 @@ namespace Celeste.Mod.CelesteNet.Server
                             continue;
                         */
 
-                        if (isUpdate && !IsSameArea(channel, state, other))
+                        if (isUpdate && !IsSameArea(channel, state, other) || Vanished)
                             continue;
 
                         other.Con.Send(blob);
