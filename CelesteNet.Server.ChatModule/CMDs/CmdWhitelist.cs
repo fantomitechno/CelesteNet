@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Celeste.Mod.CelesteNet.DataTypes;
 using MonoMod.Utils;
 
@@ -69,6 +70,21 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
       env.Server.UserData.Delete<WhiteListInfo>(uid);
 
       env.Send($"Unwhitelisted {uid}");
+    }
+  }
+
+  public class CmdWlList : ChatCmd
+  {
+
+    public override string Info => "List the whitelist.";
+
+    public override bool MustAuth => true;
+
+    public override void Run(CmdEnv env, List<ICmdArg>? args)
+    {
+      List<string> whiteList = env.Server.UserData.LoadAll<WhiteListInfo>().Keys.ToList();
+
+      env.Send($"Whitelist is {whiteList}");
     }
   }
 }
