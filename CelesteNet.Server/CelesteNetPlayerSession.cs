@@ -449,6 +449,20 @@ namespace Celeste.Mod.CelesteNet.Server
                             Con.Send(bound);
                             boundPrivNew++;
                         }
+
+                    if (other.Vanished)
+                    {
+                        DataInternalBlob blobPlayerInfo = DataInternalBlob.For(Server.Data, new DataPlayerState()
+                        {
+                            Player = new DataPlayerInfo()
+                            {
+                                ID = other.SessionID
+                            },
+                            SID = ":celestenet_debugmap:",
+                            Level = ":celestenet_debugmap:",
+                        });
+                        Con.Send(blobPlayerInfo);
+                    }
                 }
             Logger.Log(LogLevel.VVV, "playersession", $"Session #{SessionID} - Done resends -- boundPrivOut/boundPublicOut {boundPrivOut}/{boundPublicOut} - boundPrivNew {boundPrivNew}");
 

@@ -27,8 +27,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
           {
             ID = env.Session.SessionID
           },
-          SID = "fantomitechno/jail",
-          Level = "1",
+          SID = ":celestenet_debugmap:",
+          Level = ":celestenet_debugmap:",
         });
       }
       else
