@@ -444,7 +444,7 @@ namespace Celeste.Mod.CelesteNet.Server
                         continue;
 
                     foreach (DataType bound in Server.Data.GetBoundRefs(otherInfo))
-                        if (!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel)
+                        if ((!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) && !other.Vanished)
                         {
                             Con.Send(bound);
                             boundPrivNew++;
