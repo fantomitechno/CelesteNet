@@ -260,14 +260,12 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
                         state.Level != otherState.Level)
                         return false;
 
-                    msg.Text = $"Teleported to {otherPlayer.FullName}";
-                    Chat.ForceSend(msg);
+                    Chat.SendTo(self, $"Forced teleported to {otherPlayer.FullName}");
                     return true;
 
                 }, () =>
                 {
-                    msg.Text = $"Couldn't teleport to {otherPlayer.FullName} - maybe missing map?";
-                    Chat.ForceSend(msg);
+                    Chat.SendTo(self, $"Forced teleported to {otherPlayer.FullName} (but couldn't teleport: maybe missing map?)");
 
                     other.Request<DataMapModInfo>(1000, (con, info) =>
                     {
