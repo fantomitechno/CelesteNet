@@ -35,7 +35,8 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
       {
         if (env.Session.PlayerInfo != null)
         {
-          blobPlayerInfo = DataInternalBlob.For(env.Server.Data, env.Session.PlayerInfo);
+          env.Server.Data.TryGetBoundRef(env.Session.PlayerInfo, out DataPlayerState? state);
+          blobPlayerInfo = DataInternalBlob.For(env.Server.Data, state);
         }
       }
       if (blobPlayerInfo == null)
@@ -59,7 +60,7 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
           other.Con.Send(blobPlayerInfo);
           Logger.Log(LogLevel.DEV, "vanish", $"Sent {other.Name} that I connected??");
 
-          if (!other.ClientOptions.AvatarsDisabled && env.Session.Vanished)
+          if (!other.ClientOptions.AvatarsDisabled && !env.Session.Vanished)
           {
             foreach (DataInternalBlob fragBlob in env.Session.AvatarFragments)
             {
