@@ -59,6 +59,8 @@ namespace Celeste.Mod.CelesteNet.Server
 
         public bool Vanished = false;
 
+        public bool IsHost = false;
+
         public DataInternalBlob[] AvatarFragments = Dummy<DataInternalBlob>.EmptyArray;
 
         public HashSet<CelesteNetPlayerSession> AvatarSendQueue = new HashSet<CelesteNetPlayerSession>();
@@ -328,7 +330,7 @@ namespace Celeste.Mod.CelesteNet.Server
                     if (otherInfo == null)
                         continue;
 
-                    if (!Vanished)
+                    if (!Vanished && (!Server.HostMode || other.IsHost))
                     {
                         other.Con.Send(blobPlayerInfo);
                         blobSendsOut++;
@@ -432,7 +434,7 @@ namespace Celeste.Mod.CelesteNet.Server
                     }
                     foreach (DataType bound in boundAllPrivate)
                     {
-                        if (channel == other.Channel && !Vanished)
+                        if (channel == other.Channel && !Vanished && (!Server.HostMode || other.IsHost))
                         {
                             other.Con.Send(bound);
                             boundPrivOut++;
@@ -444,13 +446,13 @@ namespace Celeste.Mod.CelesteNet.Server
                         continue;
 
                     foreach (DataType bound in Server.Data.GetBoundRefs(otherInfo))
-                        if ((!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) && !other.Vanished)
+                        if ((!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) && !other.Vanished && (!Server.HostMode || IsHost))
                         {
                             Con.Send(bound);
                             boundPrivNew++;
                         }
 
-                    if (other.Vanished)
+                    if (other.Vanished || (Server.HostMode && !other.IsHost))
                     {
                         DataInternalBlob blobPlayerInfo = DataInternalBlob.For(Server.Data, new DataPlayerState()
                         {
@@ -458,8 +460,8 @@ namespace Celeste.Mod.CelesteNet.Server
                             {
                                 ID = other.SessionID
                             },
-                            SID = ":celestenet_debugmap:",
-                            Level = ":celestenet_debugmap:",
+                            SID = other.Vanished || other.IsHost ? ":celestenet_debugmap:" : "",
+                            Level = other.Vanished || other.IsHost ? ":celestenet_debugmap:" : "",
                         });
                         Con.Send(blobPlayerInfo);
                     }
@@ -631,7 +633,7 @@ namespace Celeste.Mod.CelesteNet.Server
             using (Server.ConLock.R())
                 foreach (CelesteNetPlayerSession other in Server.Sessions)
                 {
-                    if (other == this || Vanished)
+                    if (other == this || Vanished || (Server.HostMode && !other.IsHost))
                         continue;
 
                     other.Con.Send(blob);
@@ -675,7 +677,7 @@ namespace Celeste.Mod.CelesteNet.Server
                             continue;
                         */
 
-                        if (isUpdate && !IsSameArea(channel, state, other) || Vanished)
+                        if (isUpdate && !IsSameArea(channel, state, other) || Vanished || (Server.HostMode && !other.IsHost))
                             continue;
 
                         other.Con.Send(blob);

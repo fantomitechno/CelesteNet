@@ -28,6 +28,9 @@ namespace Celeste.Mod.CelesteNet.Server {
         public readonly Channels Channels;
 
         public bool Initialized = false;
+
+        public bool HostMode = false;
+
         public readonly List<CelesteNetServerModuleWrapper> ModuleWrappers = new();
         public readonly List<CelesteNetServerModule> Modules = new();
         public readonly Dictionary<Type, CelesteNetServerModule> ModuleMap = new();
