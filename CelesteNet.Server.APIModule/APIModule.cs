@@ -1,4 +1,3 @@
-using System.IO;
 using Celeste.Mod.CelesteNet.Server.Sqlite;
 
 namespace Celeste.Mod.CelesteNet.Server.API
