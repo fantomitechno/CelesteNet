@@ -1,30 +1,43 @@
-# CelesteNet
+Original [README](https://github.com/0x0ade/CelesteNet)
+---
+# CelesteNet (hosted)
+> "Really adding hosted and this is the name of the fork?", me after searching for a real name
 
-[discord-celestenet]: https://discord.gg/celeste "Join #celestenet on the 'Mt. Celeste Climbing Association' Discord server"
-[celeste-game]: https://www.celestegame.com/ "Official Celeste website"
-[everest-site]: https://everestapi.github.io/ "Everest mod loader website"
-[celestenet-download]: https://gamebanana.com/gamefiles/12267 "CelesteNet Download (GameBanana)"
+This branch (`hosted`) is a fork of CelesteNet only focused on modifying its server... and then there is the other branches that are here for me to contribute to main CelesteNet.
 
-[![discord](https://img.shields.io/discord/403698615446536203.svg?color=7289da&logo=discord&logoColor=ffffff)][discord-celestenet]
-[![Latest Version](https://img.shields.io/github/tag/0x0ade/Celestenet.svg?label=version)][celestenet-download]
-[![License](https://img.shields.io/github/license/0x0ade/Celestenet.svg)](LICENSE)
+These features are mainly focused on content creation.
 
-(we're in `#celestenet` on the "Mt. Celeste Climbing Association" Discord server)
+## Added features
+### Commands
+- `/vanish` (requires auth): hides you from all other players, you can still see their movements
+- `/hostme` (requires auth): Sets you as an host
+- `/hostgame` (requires auth): Sets the server in Host mode
+- `/countdown [N]` (requires auth): sends a countdown as a server status (bottom right of the screen) to all players
+- `/tpall` (requires auth): Teleports everyone to you
+- `/state` (requires auth): Shows the state of the server (host mode: on/off, list of hosts, list of vanished)
 
-## What is CelesteNet?
+### Host Mode
+Host mode will make everyone invisible to everyone else except hosts that can see everyone and everything.
 
-[![CelesteNet Website](CelesteNet.Server.FrontendModule/Content/website_button.png)](https://celestenet.0x0a.de/) [![CelesteNet Download](CelesteNet.Server.FrontendModule/Content/download_button.png)][celestenet-download]
+### Main server reliant Authentification
+(jank but useful)\
+When connecting to a CelesteNet server with a key (obtained by connecting to Discord), this key can only be use on the instance it was generated.
 
-CelesteNet is an online multiplayer mod for [Celeste][celeste-game], using the [Everest mod loader][everest-site], made with a lot of love.
-It lets you join levels together with your friends or complete strangers, even jumping on others' heads and throwing them across pits if you want to! There even are some multiplayer-exclusive maps and custom game modes for you to experience already, and more in development by the community.
+Keys generated on celestenet.0x0a.de can only be used on CelesteNet hosted at celestenet.0x0a.de.
 
-## How do I play on CelesteNet?
+This module makes it so you can use a key generated on celestenet.0x0a.de (or an other instance selected in server settings) on your instance.
 
-First, make sure that you've installed [Everest (mod loader) via Olympus (mod manager)][everest-site].
-Click on the "Download CelesteNet" button above, then click the "1-CLICK INSTALL" button on the latest version.
+This allows to switch from official CelesteNet server to one using this system flawlessly.
+
+⚠️ When connecting to a server using this, you need to trust them, your key will navigate through their server **clear as glass**. This key can be used to impersonate you on the main CelesteNet server! If you ever think, you joined an untrusted server: visit https://celestenet.0x0a.de, connect and click `Revoke key`.
+
+### Whitelist
+A whitelist using Discord IDs... do not use the ingame commands, there is no paste in chat...
 
 ---
 
 #### License notice
+
+This project follows the original CelesteNet Licensing and stays under MIT.
 
 The CelesteNet.Server.FrontendModule project/module uses [ImageSharp](https://github.com/SixLabors/ImageSharp/) under Apache 2.0 license terms per [Six Labors Split License 1.0](https://github.com/SixLabors/ImageSharp/blob/main/LICENSE)
