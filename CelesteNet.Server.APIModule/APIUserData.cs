@@ -200,6 +200,8 @@ namespace Celeste.Mod.CelesteNet.Server.API
           toModify.Tags.Remove(BasicUserInfo.TAG_AUTH_EXEC);
         }
 
+        toModify.Tags.Add("fromAPI");
+
         value = (T)(Object)toModify;
 
         Fallback.Save(uid, value);
