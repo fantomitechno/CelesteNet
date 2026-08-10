@@ -104,7 +104,7 @@ namespace Celeste.Mod.CelesteNet.Server.Chat.Cmd
         using (env.Server.ConLock.R())
           foreach (CelesteNetPlayerSession other in env.Server.Sessions)
           {
-            if (other == session || other.IsHost)
+            if (other == session || other.IsHost || (other.Channel.Name == session.Channel.Name && session.Channel.Name.StartsWith("team")))
               continue;
 
             DataPlayerInfo? otherInfo = other.PlayerInfo;

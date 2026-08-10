@@ -330,7 +330,7 @@ namespace Celeste.Mod.CelesteNet.Server
                     if (otherInfo == null)
                         continue;
 
-                    if (!Vanished && (!Server.HostMode || other.IsHost))
+                    if (!Vanished && (!Server.HostMode || other.IsHost || (other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                     {
                         other.Con.Send(blobPlayerInfo);
                         blobSendsOut++;
@@ -434,7 +434,7 @@ namespace Celeste.Mod.CelesteNet.Server
                     }
                     foreach (DataType bound in boundAllPrivate)
                     {
-                        if (channel == other.Channel && !Vanished && (!Server.HostMode || other.IsHost))
+                        if (channel == other.Channel && !Vanished && (!Server.HostMode || other.IsHost || (other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                         {
                             other.Con.Send(bound);
                             boundPrivOut++;
@@ -446,13 +446,13 @@ namespace Celeste.Mod.CelesteNet.Server
                         continue;
 
                     foreach (DataType bound in Server.Data.GetBoundRefs(otherInfo))
-                        if ((!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) && !other.Vanished && (!Server.HostMode || IsHost))
+                        if ((!bound.Is<MetaPlayerPrivateState>(Server.Data) || channel == other.Channel) && !other.Vanished && (!Server.HostMode || IsHost || (other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                         {
                             Con.Send(bound);
                             boundPrivNew++;
                         }
 
-                    if (other.Vanished || (Server.HostMode && !other.IsHost))
+                    if (other.Vanished || (Server.HostMode && !other.IsHost && !(other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                     {
                         DataInternalBlob blobPlayerInfo = DataInternalBlob.For(Server.Data, new DataPlayerState()
                         {
@@ -475,7 +475,7 @@ namespace Celeste.Mod.CelesteNet.Server
 
         public bool IsSameArea(Channel channel, DataPlayerState? state, CelesteNetPlayerSession other)
             => state != null &&
-                other.Channel == channel &&
+                (other.Channel == channel || IsHost) &&
                 Server.Data.TryGetBoundRef(other.PlayerInfo, out DataPlayerState? otherState) &&
                 otherState != null &&
                 otherState.SID == state.SID &&
@@ -633,7 +633,7 @@ namespace Celeste.Mod.CelesteNet.Server
             using (Server.ConLock.R())
                 foreach (CelesteNetPlayerSession other in Server.Sessions)
                 {
-                    if (other == this || Vanished || (Server.HostMode && !other.IsHost))
+                    if (other == this || Vanished || (Server.HostMode && !other.IsHost && !(other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                         continue;
 
                     other.Con.Send(blob);
@@ -677,7 +677,7 @@ namespace Celeste.Mod.CelesteNet.Server
                             continue;
                         */
 
-                        if (isUpdate && !IsSameArea(channel, state, other) || Vanished || (Server.HostMode && !other.IsHost))
+                        if (isUpdate && !IsSameArea(channel, state, other) || Vanished || (Server.HostMode && !other.IsHost && !(other.Channel.Name == Channel.Name && Channel.Name.StartsWith("team"))))
                             continue;
 
                         other.Con.Send(blob);

@@ -19,6 +19,8 @@ These features are mainly focused on content creation.
 ### Host Mode
 Host mode will make everyone invisible to everyone else except hosts that can see everyone and everything.
 
+Hosts can see everyone in all channels. Channels can also be used as teams as people in a same channel can see each other if the channel name starts with `team`.
+
 ### Main server reliant Authentification
 (jank but useful)\
 When connecting to a CelesteNet server with a key (obtained by connecting to Discord), this key can only be use on the instance it was generated.
